@@ -1,19 +1,18 @@
 import React, { Component } from "react";
 import { getMovies } from "../services/fakeMovieService";
 import Like from "./common/like";
-
+import Pagination from "./common/pagination";
+import { paginate } from "../utils/paginate";
 class Movies extends Component {
-  numCount = 0;
   state = {
-    count: 0,
-    movies: getMovies()
+    movies: getMovies(),
+    pageSize: 4,
+    currentPage: 1
   };
 
   handleDelete = movie => {
-    console.log(movie);
     const movies = this.state.movies.filter(m => m._id !== movie._id);
     this.setState({ movies });
-    this.numCount = 0;
   };
 
   handleLike = movie => {
@@ -23,19 +22,21 @@ class Movies extends Component {
     movies[index] = { ...movies[index] };
     movies[index].liked = !movies[index].liked;
     this.setState({ movies });
-    this.numCount = 0;
+  };
+  handlePageChange = page => {
+    this.setState({ currentPage: page });
   };
   render() {
-    if (this.state.movies.length === 0)
-      return <h1>There are no movies in the database!</h1>;
-
+    const { length: count } = this.state.movies;
+    const { pageSize, currentPage, movies: allMovies } = this.state;
+    if (count === 0) return <h1>There are no movies in the database!</h1>;
+    const movies = paginate(allMovies, currentPage, pageSize);
     return (
       <React.Fragment>
-        <p>There are {this.state.movies.length} movies in the database!</p>
+        <p>There are {count} movies in the database!</p>
         <table className="table table-striped col-md-6 offset-md-3">
           <thead>
             <tr>
-              <th scope="col">#</th>
               <th scope="col">Title</th>
               <th scope="col">Gender</th>
               <th scope="col">Stock</th>
@@ -45,10 +46,9 @@ class Movies extends Component {
             </tr>
           </thead>
           <tbody>
-            {this.state.movies.map(movie => {
+            {movies.map(movie => {
               return (
                 <tr key={movie._id}>
-                  <th scope="row">{++this.numCount}</th>
                   <td>{movie.title}</td>
                   <td>{movie.genre.name}</td>
                   <td>{movie.numberInStock}</td>
@@ -72,6 +72,12 @@ class Movies extends Component {
             })}
           </tbody>
         </table>
+        <Pagination
+          itemCount={count}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={this.handlePageChange}
+        />
       </React.Fragment>
     );
   }
