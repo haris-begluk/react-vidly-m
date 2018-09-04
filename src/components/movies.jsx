@@ -5,15 +5,17 @@ import { paginate } from "../utils/paginate";
 import ListGroup from "./common/listGroup";
 import { getGenres } from "../services/fakeGenreService";
 import MoviesTable from "./moviesTable";
+import _ from "lodash";
 class Movies extends Component {
   state = {
     movies: [],
     genres: [],
     pageSize: 4,
-    currentPage: 1
+    currentPage: 1,
+    sortColumn: { path: "title", order: "asc" }
   };
   componentDidMount() {
-    const genres = [{ name: "All Genres" }, ...getGenres()]; //Adding "All Genres" option
+    const genres = [{ _id: "", name: "All Genres" }, ...getGenres()]; //Adding "All Genres" option
     this.setState({ movies: getMovies(), genres });
   }
   handleDelete = movie => {
@@ -35,20 +37,28 @@ class Movies extends Component {
   handleGenreSelect = genre => {
     this.setState({ selectedGenre: genre, currentPage: 1 });
   };
+
+  handleSort = sortColumn => {
+    this.setState({ sortColumn });
+  };
+
   render() {
     const { length: count } = this.state.movies;
     const {
       pageSize,
       currentPage,
       selectedGenre,
-      movies: allMovies
+      movies: allMovies,
+      sortColumn
     } = this.state;
     if (count === 0) return <h1>There are no movies in the database!</h1>;
     const filtered =
       selectedGenre && selectedGenre._id
         ? allMovies.filter(m => m.genre._id === selectedGenre._id)
         : allMovies;
-    const movies = paginate(filtered, currentPage, pageSize);
+
+    const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]);
+    const movies = paginate(sorted, currentPage, pageSize);
     return (
       <div className="row">
         <div className="col-4">
@@ -62,8 +72,10 @@ class Movies extends Component {
           <p>There are {filtered.length} movies in the database!</p>
           <MoviesTable
             movies={movies}
+            sortColumn={sortColumn}
             onLike={this.handleLike}
             onDelete={this.handleDelete}
+            onSort={this.handleSort}
           />
           <Pagination
             itemCount={filtered.length}
