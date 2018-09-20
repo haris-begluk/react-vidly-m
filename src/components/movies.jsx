@@ -3,7 +3,7 @@ import { getMovies } from "../services/fakeMovieService";
 import Pagination from "./common/pagination";
 import { paginate } from "../utils/paginate";
 import ListGroup from "./common/listGroup";
-import { getGenres } from "../services/fakeGenreService";
+import { getGenres } from "../services/genreService";
 import MoviesTable from "./moviesTable";
 import { Link } from "react-router-dom";
 import _ from "lodash";
@@ -18,8 +18,10 @@ class Movies extends Component {
     currentPage: 1,
     sortColumn: { path: "title", order: "asc" }
   };
-  componentDidMount() {
-    const genres = [{ _id: "", name: "All Genres" }, ...getGenres()]; //Adding "All Genres" option
+  async componentDidMount() {
+    const { data } = await getGenres();
+    console.log(data);
+    const genres = [{ _id: "", name: "All Genres" }, ...data]; //Adding "All Genres" option
     this.setState({ movies: getMovies(), genres });
   }
   handleDelete = movie => {
